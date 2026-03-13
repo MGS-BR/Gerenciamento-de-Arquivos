@@ -1,10 +1,11 @@
 import sys
-import tkinter as tk
 from tkinter import *
 from tkinter import scrolledtext
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
+from pathlib import Path
+
 
 class TextRedirector:
     def __init__(self, widget):
@@ -33,6 +34,14 @@ class Application:
 
         janela.geometry(f"+{x}+{y}")
 
+    def selecionar_pasta(self, entry):
+
+        pasta = filedialog.askdirectory()
+
+        if pasta:
+            entry.delete(0, END)
+            entry.insert(0, pasta)
+
     def __init__(self, master=None):
         self.fontePadrao = ("Arial", "10")
         self.fontePadraoBold = ("Arial", "10", "bold")
@@ -56,46 +65,46 @@ class Application:
 
         tipoArquivoLabel = Label(forms, text="Tipo de arquivo:", font=self.fontePadrao, width=15, anchor="e")
         tipoArquivoLabel.grid(row=0, column=0, padx=10, pady=5)
-        tipoArquivoCombo = ttk.Combobox(
+        self.tipoArquivoCombo = ttk.Combobox(
             forms,
             values=list(self.arquivo_selecionado.keys()),
             state="readonly",
             width=25,
             )
-        tipoArquivoCombo.current(0)
-        tipoArquivoCombo.grid(row=0, column=1, pady=5)
+        self.tipoArquivoCombo.current(0)
+        self.tipoArquivoCombo.grid(row=0, column=1, pady=5)
 
         pastaOrigemLabel = Label(forms, text="Pasta de origem:", font=self.fontePadrao, width=15, anchor="e")
         pastaOrigemLabel.grid(row=1, column=0, padx=10, pady=5)
 
-        pastaOrigemEntry = Entry(forms, width=35)
-        pastaOrigemEntry.grid(row=1, column=1, pady=5)
+        self.pastaOrigemEntry = Entry(forms, width=35)
+        self.pastaOrigemEntry.grid(row=1, column=1, pady=5)
 
         pastaOrigemBtn = Button(
         forms,
         text="📁",
-        command=lambda: pastaOrigemEntry.insert(0, filedialog.askdirectory())
+        command=lambda: self.selecionar_pasta(self.pastaOrigemEntry)
         )
         pastaOrigemBtn.grid(row=1, column=2, padx=5)
 
         pastaDestinoLabel = Label(forms, text="Pasta de destino:", font=self.fontePadrao, width=15, anchor="e")
         pastaDestinoLabel.grid(row=2, column=0, padx=10, pady=5)
 
-        pastaDestinoEntry = Entry(forms, width=35)
-        pastaDestinoEntry.grid(row=2, column=1, pady=5)
+        self.pastaDestinoEntry = Entry(forms, width=35)
+        self.pastaDestinoEntry.grid(row=2, column=1, pady=5)
 
         pastaDestinoBtn = Button(
         forms,
         text="📁",
-        command=lambda: pastaDestinoEntry.insert(0, filedialog.askdirectory())
+        command=lambda: self.selecionar_pasta(self.pastaDestinoEntry)
         )
         pastaDestinoBtn.grid(row=2, column=2, padx=5)
 
         pastaCaminhoLabel = Label(forms, text="Caminho do arquivo:", font=self.fontePadrao, width=15, anchor="e")
         pastaCaminhoLabel.grid(row=3, column=0, padx=10, pady=5)
 
-        pastaCaminhoEntry = Entry(forms, width=35)
-        pastaCaminhoEntry.grid(row=3, column=1, pady=5)
+        self.pastaCaminhoEntry = Entry(forms, width=35)
+        self.pastaCaminhoEntry.grid(row=3, column=1, pady=5)
 
         pastaCaminhoBtn = Button(
         forms,
@@ -107,8 +116,8 @@ class Application:
         renomearLabel = Label(forms, text="Renomear arquivos:", font=self.fontePadrao, width=15, anchor="e")
         renomearLabel.grid(row=4, column=0, padx=10, pady=5)
 
-        renomearEntry = Entry(forms, width=35)
-        renomearEntry.grid(row=4, column=1, pady=5)
+        self.renomearEntry = Entry(forms, width=35)
+        self.renomearEntry.grid(row=4, column=1, pady=5)
 
         renomearBtn = Button(
         forms,
@@ -117,12 +126,20 @@ class Application:
         )
         renomearBtn.grid(row=4, column=2, padx=5)
 
+        executarBtn = Button(
+        main,
+        text="Executar",
+        command=self.executar,
+        width=20
+        )
+        executarBtn.pack(pady=10)
+
         console = scrolledtext.ScrolledText(main, state='normal', height=15, width=50, bg='black', fg='white')
         console.pack(pady=20)
 
         sys.stdout = TextRedirector(console)
 
-        self.localizacao_codigo_selecionado = 0
+        self.localizacao_codigo_selecionado = 1
 
         self.centralizar_janela(master)
 
@@ -152,6 +169,26 @@ class Application:
         localCodigoLabel = Label(janelaConfig, text="Localização do código:", font=self.fontePadrao)
         localCodigoLabel.grid(row=1, column=0, padx=10, pady=10, sticky="e")
 
+        def mudar_exemplo(combo, label):
+
+            selecionado = combo.get()
+
+            textos = {
+                "Início": "CODIGO arquivo de exemplo.pdf",
+                "Fim": "arquivo de exemplo CODIGO.pdf"
+            }
+
+            label.config(text=f"Exemplo: '{textos[selecionado]}'")
+
+        def exemplo_inicial(combo):
+
+            selecionado = combo.get()
+
+            if selecionado == "Início":
+                return "Exemplo: CODIGO arquivo de exemplo.pdf"
+            else:
+                return "Exemplo: arquivo de exemplo CODIGO.pdf"
+
         localCodigoCombo = ttk.Combobox(
             janelaConfig,
             values=list(self.localizao_codigo.keys()),
@@ -160,8 +197,13 @@ class Application:
         localCodigoCombo.current(self.localizacao_codigo_selecionado)
         localCodigoCombo.grid(row=1, column=1, padx=10, pady=10)
 
+        exemploLabel = Label(janelaConfig, text=exemplo_inicial(localCodigoCombo), font=self.fontePadrao, fg="gray")
+        exemploLabel.grid(row=2, column=0, columnspan=2, pady=(0,10))
+
+        localCodigoCombo.bind("<<ComboboxSelected>>", lambda e: mudar_exemplo(localCodigoCombo, exemploLabel))
+
         frameBotoes = Frame(janelaConfig)
-        frameBotoes.grid(row=2, column=0, columnspan=2, pady=20)
+        frameBotoes.grid(row=3, column=0, columnspan=2, pady=20)
 
         sairBtn = Button(frameBotoes, text="Sair", command=janelaConfig.destroy, width=12)
         sairBtn.pack(side=LEFT, padx=10)
@@ -175,6 +217,29 @@ class Application:
         confirmarBtn.pack(side=LEFT, padx=10)
 
         self.centralizar_janela(janelaConfig)
+
+    def executar(self):
+        print("Função de execução ainda não implementada!")
+
+        pastaOrigem = self.pastaOrigemEntry.get()
+        pastaDestino = self.pastaDestinoEntry.get()
+        pastaCaminho = self.pastaCaminhoEntry.get()
+        renomear = self.renomearEntry.get()
+        tipoArquivo = self.tipoArquivoCombo.get()
+        
+        if not pastaOrigem or not pastaDestino:
+            messagebox.showerror("Erro", "Por favor, preencha os campos de pasta de origem e pasta de destino!")
+            return
+
+        arquivos = {}
+
+        for arquivo in Path(pastaOrigem).glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
+            if self.arquivo_selecionado[tipoArquivo] == "Pasta":
+                if arquivo.is_dir():
+                    print(arquivo)
+            else:
+                if arquivo.is_file():
+                    print(arquivo)
 
 root = Tk()
 root.title("Conntador")
