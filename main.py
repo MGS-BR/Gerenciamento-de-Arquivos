@@ -234,12 +234,10 @@ class Application:
         arquivos = {}
 
         for arquivo in Path(pastaOrigem).glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
-            if self.arquivo_selecionado[tipoArquivo] == "Pasta":
-                if arquivo.is_dir():
-                    print(arquivo)
+            if tipoArquivo == "Pasta" and arquivo.is_dir():
+                print(f"pasta: {arquivo}")
             else:
-                if arquivo.is_file():
-                    print(arquivo)
+                print(f"arquivo: {arquivo}")
 
 root = Tk()
 root.title("Conntador")
