@@ -6,7 +6,6 @@ from tkinter import messagebox
 from tkinter import ttk
 from pathlib import Path
 
-
 class TextRedirector:
     def __init__(self, widget):
         self.widget = widget
@@ -149,10 +148,7 @@ class Application:
         "Pasta": ""
     }
 
-    localizao_codigo = {
-        "Início": "[:-3]",
-        "Fim": "[:-4][-3:]"
-    }
+    localizao_codigo = ["Início", "Fim"]
 
     def config(self):
 
@@ -191,7 +187,7 @@ class Application:
 
         localCodigoCombo = ttk.Combobox(
             janelaConfig,
-            values=list(self.localizao_codigo.keys()),
+            values=self.localizao_codigo,
             state="readonly"
         )
         localCodigoCombo.current(self.localizacao_codigo_selecionado)
@@ -209,7 +205,7 @@ class Application:
         sairBtn.pack(side=LEFT, padx=10)
 
         def confirmar():
-            self.localizacao_codigo_selecionado = list(self.localizao_codigo.keys()).index(localCodigoCombo.get())
+            self.localizacao_codigo_selecionado = self.localizao_codigo.index(localCodigoCombo.get())
             messagebox.showinfo("Configurações", "Configurações salvas com sucesso!")
             janelaConfig.destroy()
 
@@ -219,25 +215,66 @@ class Application:
         self.centralizar_janela(janelaConfig)
 
     def executar(self):
-        print("Função de execução ainda não implementada!")
 
         pastaOrigem = self.pastaOrigemEntry.get()
         pastaDestino = self.pastaDestinoEntry.get()
         pastaCaminho = self.pastaCaminhoEntry.get()
         renomear = self.renomearEntry.get()
         tipoArquivo = self.tipoArquivoCombo.get()
+
+        arquivosMovidos = 0
+        arquivosErro = 0
+        arquivosNaoEncontrados = 0
         
         if not pastaOrigem or not pastaDestino:
             messagebox.showerror("Erro", "Por favor, preencha os campos de pasta de origem e pasta de destino!")
             return
 
-        arquivos = {}
+        arquivos = {} # codigo:{"caminho": caminho_arquivo, "arquivo": nome_arquivo}
+
+        for pasta in Path(pastaDestino).glob("*"):
+             if pasta.is_dir():
+                caminho = pastaDestino / pasta / pastaCaminho
+                arquivos[pasta.name[:3]] = {"caminho": caminho, "arquivo": None}
 
         for arquivo in Path(pastaOrigem).glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
-            if tipoArquivo == "Pasta" and arquivo.is_dir():
-                print(f"pasta: {arquivo}")
+
+            if self.localizao_codigo[self.localizacao_codigo_selecionado] == "Início":
+                codigo = arquivo.stem[:3]
             else:
-                print(f"arquivo: {arquivo}")
+                codigo = arquivo.stem[-3:]
+
+            if codigo in arquivos:
+
+                if tipoArquivo == "Pasta" and arquivo.is_dir():
+
+                    arquivos[codigo]["arquivo"] = arquivo
+
+                else:
+                    arquivos[codigo]["arquivo"] = arquivo
+
+        for item in arquivos.items():
+
+            codigo = item[0]
+            caminhoDestino = arquivos[item[0]]["caminho"]
+            arquivo = arquivos[item[0]]["arquivo"]
+
+            if arquivo is not None:
+
+                print(f"Movendo '{arquivo.name}' para '{caminhoDestino}'")
+
+                try:
+                    caminhoDestino.mkdir(parents=True, exist_ok=True)
+                    arquivo.rename(caminhoDestino / (renomear if renomear else arquivo.name))
+                    arquivosMovidos += 1
+                except Exception as e:
+                    arquivosErro += 1
+                    print(f"Erro ao mover o arquivo '{arquivo.name}': {e}")
+            else:
+                arquivosNaoEncontrados += 1
+                print(f"Nenhum arquivo encontrado para o código '{codigo}'")
+
+        print(f"\nProcesso concluído!\n{arquivosMovidos} arquivo(s) movido(s).\n{arquivosErro} arquivo(s) com erro ao mover.\n{arquivosNaoEncontrados} código(s) sem arquivo correspondente.\n")
 
 root = Tk()
 root.title("Conntador")
