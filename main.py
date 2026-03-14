@@ -233,7 +233,7 @@ class Application:
         arquivos = {} # codigo:{"caminho": caminho_arquivo, "arquivo": nome_arquivo}
 
         for pasta in Path(pastaDestino).glob("*"):
-             if pasta.is_dir():
+            if pasta.is_dir():
                 caminho = pastaDestino / pasta / pastaCaminho
                 arquivos[pasta.name[:3]] = {"caminho": caminho, "arquivo": None}
 
