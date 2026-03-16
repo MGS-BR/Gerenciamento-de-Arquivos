@@ -1,4 +1,6 @@
 import sys
+import shutil
+import threading
 from tkinter import *
 from tkinter import scrolledtext
 from tkinter import filedialog
@@ -40,6 +42,10 @@ class Application:
         if pasta:
             entry.delete(0, END)
             entry.insert(0, pasta)
+
+    def executar_thread(self, comando):
+        thread = threading.Thread(target=comando)
+        thread.start()
 
     def __init__(self, master=None):
         self.fontePadrao = ("Arial", "10")
@@ -128,10 +134,18 @@ class Application:
         executarBtn = Button(
         main,
         text="Executar",
-        command=self.executar,
+        command=lambda: self.executar_thread(self.executar),
         width=20
         )
         executarBtn.pack(pady=10)
+
+        self.progressBar = ttk.Progressbar(
+            main,
+            orient="horizontal",
+            length=400,
+            mode="determinate"
+        )
+        self.progressBar.pack(pady=10)
 
         console = scrolledtext.ScrolledText(main, state='normal', height=15, width=50, bg='black', fg='white')
         console.pack(pady=20)
@@ -230,6 +244,10 @@ class Application:
             messagebox.showerror("Erro", "Por favor, preencha os campos de pasta de origem e pasta de destino!")
             return
 
+        else:
+            pastaOrigem = Path(pastaOrigem)
+            pastaDestino = Path(pastaDestino)
+
         arquivos = {} # codigo:{"caminho": caminho_arquivo, "arquivo": nome_arquivo}
 
         for pasta in Path(pastaDestino).glob("*"):
@@ -246,26 +264,39 @@ class Application:
 
             if codigo in arquivos:
 
-                if tipoArquivo == "Pasta" and arquivo.is_dir():
+                if tipoArquivo == "Pasta":
+                    if arquivo.is_dir():
 
-                    arquivos[codigo]["arquivo"] = arquivo
+                        arquivos[codigo]["arquivo"] = arquivo
 
                 else:
                     arquivos[codigo]["arquivo"] = arquivo
 
-        for item in arquivos.items():
+        totalArquivos = sum(1 for dados in arquivos.values() if dados["arquivo"] is not None)
+        print(f"Total de arquivos a mover: {totalArquivos}\n")
+        self.progressBar["maximum"] = totalArquivos
+        self.progressBar["value"] = 0
 
-            codigo = item[0]
-            caminhoDestino = arquivos[item[0]]["caminho"]
-            arquivo = arquivos[item[0]]["arquivo"]
+        for codigo, dados in arquivos.items():
+
+            caminhoDestino = dados["caminho"]
+            arquivo = dados["arquivo"]
 
             if arquivo is not None:
 
-                print(f"Movendo '{arquivo.name}' para '{caminhoDestino}'")
+                print(f"Movendo {arquivo.name}")
+                self.progressBar["value"] += 1
+                self.progressBar.update()
 
                 try:
                     caminhoDestino.mkdir(parents=True, exist_ok=True)
-                    arquivo.rename(caminhoDestino / (renomear if renomear else arquivo.name))
+
+                    if renomear:
+                        novoNome = f"{renomear}{arquivo.suffix}"
+                    else:
+                        novoNome = arquivo.name
+
+                    shutil.move(str(arquivo), str(caminhoDestino / novoNome))
                     arquivosMovidos += 1
                 except Exception as e:
                     arquivosErro += 1
