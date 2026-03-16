@@ -131,13 +131,13 @@ class Application:
         )
         renomearBtn.grid(row=4, column=2, padx=5)
 
-        executarBtn = Button(
+        self.executarBtn = Button(
         main,
         text="Executar",
         command=lambda: self.executar_thread(self.executar),
         width=20
         )
-        executarBtn.pack(pady=10)
+        self.executarBtn.pack(pady=10)
 
         self.progressBar = ttk.Progressbar(
             main,
@@ -228,10 +228,23 @@ class Application:
 
         self.centralizar_janela(janelaConfig)
 
+    def validar_entradas(self):
+
+        if not self.pastaOrigemEntry.get():
+            messagebox.showerror("Erro", "Por favor, preencha o campo de pasta de origem!")
+            return False
+        if not self.pastaDestinoEntry.get():
+            messagebox.showerror("Erro", "Por favor, preencha o campo de pasta de destino!")
+            return False
+        return True
+
     def executar(self):
 
-        pastaOrigem = self.pastaOrigemEntry.get()
-        pastaDestino = self.pastaDestinoEntry.get()
+        if not self.validar_entradas():
+            return
+
+        pastaOrigem = Path(self.pastaOrigemEntry.get())
+        pastaDestino = Path(self.pastaDestinoEntry.get())
         pastaCaminho = self.pastaCaminhoEntry.get()
         renomear = self.renomearEntry.get()
         tipoArquivo = self.tipoArquivoCombo.get()
@@ -239,23 +252,17 @@ class Application:
         arquivosMovidos = 0
         arquivosErro = 0
         arquivosNaoEncontrados = 0
-        
-        if not pastaOrigem or not pastaDestino:
-            messagebox.showerror("Erro", "Por favor, preencha os campos de pasta de origem e pasta de destino!")
-            return
 
-        else:
-            pastaOrigem = Path(pastaOrigem)
-            pastaDestino = Path(pastaDestino)
+        self.executarBtn.config(state="disabled", text="Executando...")
 
         arquivos = {} # codigo:{"caminho": caminho_arquivo, "arquivo": nome_arquivo}
 
-        for pasta in Path(pastaDestino).glob("*"):
+        for pasta in pastaDestino.glob("*"):
             if pasta.is_dir():
                 caminho = pastaDestino / pasta / pastaCaminho
                 arquivos[pasta.name[:3]] = {"caminho": caminho, "arquivo": None}
 
-        for arquivo in Path(pastaOrigem).glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
+        for arquivo in pastaOrigem.glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
 
             if self.localizao_codigo[self.localizacao_codigo_selecionado] == "Início":
                 codigo = arquivo.stem[:3]
@@ -273,7 +280,7 @@ class Application:
                     arquivos[codigo]["arquivo"] = arquivo
 
         totalArquivos = sum(1 for dados in arquivos.values() if dados["arquivo"] is not None)
-        print(f"Total de arquivos a mover: {totalArquivos}\n")
+        print(f"Total de arquivos a mover: {totalArquivos}")
         self.progressBar["maximum"] = totalArquivos
         self.progressBar["value"] = 0
 
@@ -306,6 +313,7 @@ class Application:
                 print(f"Nenhum arquivo encontrado para o código '{codigo}'")
 
         print(f"\nProcesso concluído!\n{arquivosMovidos} arquivo(s) movido(s).\n{arquivosErro} arquivo(s) com erro ao mover.\n{arquivosNaoEncontrados} código(s) sem arquivo correspondente.\n")
+        self.executarBtn.config(state="normal", text="Executar")
 
 root = Tk()
 root.title("Conntador")
