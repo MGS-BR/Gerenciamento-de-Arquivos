@@ -21,6 +21,15 @@ class TextRedirector:
 
 class Application:
 
+    arquivo_selecionado = {
+        "PDF": ".pdf",
+        "XML": ".xml",
+        "Pasta": "",
+        "Tudo": ""
+    }
+
+    localizacao_codigo = ["Início", "Fim"]
+
     def centralizar_janela(self, janela):
         janela.update_idletasks()
 
@@ -44,11 +53,14 @@ class Application:
             entry.insert(0, pasta)
 
     def executar_thread(self, comando):
-        thread = threading.Thread(target=comando)
-        thread.start()
+        threading.Thread(target=comando, daemon=True).start()
 
     def __init__(self, master=None):
+
+        self.master = master
+
         self.fontePadrao = ("Arial", "10")
+        self.fontePequena = ("Arial", "5")
         self.fontePadraoBold = ("Arial", "10", "bold")
 
         master.minsize(500,400)
@@ -129,7 +141,7 @@ class Application:
         text="❓",
         command=lambda: messagebox.showinfo("Renomear Arquivos", "Após mover os arquivos para a pasta de destino os arquivos serão renomeados para o texto informado neste campo.\n\nNão é obrigatório o preenchimento deste campo!")
         )
-        renomearBtn.grid(row=4, column=2, padx=5)
+        renomearBtn.grid(row=4, column=2, padx=5, pady=10)
 
         self.executarBtn = Button(
         main,
@@ -137,7 +149,10 @@ class Application:
         command=lambda: self.executar_thread(self.executar),
         width=20
         )
-        self.executarBtn.pack(pady=10)
+        self.executarBtn.pack()
+
+        self.progressLabel = Label(main, text="", font=self.fontePadrao)
+        self.progressLabel.pack()
 
         self.progressBar = ttk.Progressbar(
             main,
@@ -145,7 +160,7 @@ class Application:
             length=400,
             mode="determinate"
         )
-        self.progressBar.pack(pady=10)
+        self.progressBar.pack()
 
         console = scrolledtext.ScrolledText(main, state='normal', height=15, width=50, bg='black', fg='white')
         console.pack(pady=20)
@@ -155,14 +170,6 @@ class Application:
         self.localizacao_codigo_selecionado = 1
 
         self.centralizar_janela(master)
-
-    arquivo_selecionado = {
-        "PDF": ".pdf",
-        "XML": ".xml",
-        "Pasta": ""
-    }
-
-    localizao_codigo = ["Início", "Fim"]
 
     def config(self):
 
@@ -248,72 +255,83 @@ class Application:
         pastaCaminho = self.pastaCaminhoEntry.get()
         renomear = self.renomearEntry.get()
         tipoArquivo = self.tipoArquivoCombo.get()
+        localCodigo = self.localizacao_codigo[self.localizacao_codigo_selecionado]
 
         arquivosMovidos = 0
         arquivosErro = 0
         arquivosNaoEncontrados = 0
 
-        self.executarBtn.config(state="disabled", text="Executando...")
+        self.master.after(0, lambda: self.executarBtn.config(state="disabled", text="Executando..."))
 
-        arquivos = {} # codigo:{"caminho": caminho_arquivo, "arquivo": nome_arquivo}
+        arquivos = {} # codigo = {"arquivo": "teste.pdf", "destino": "C:/destino/codigo"}
 
-        for pasta in pastaDestino.glob("*"):
-            if pasta.is_dir():
-                caminho = pastaDestino / pasta / pastaCaminho
-                arquivos[pasta.name[:3]] = {"caminho": caminho, "arquivo": None}
+        for arquivo in pastaOrigem.glob(f"*{self.arquivo_selecionado[tipoArquivo]}"): # criar itens no dicionário
 
-        for arquivo in pastaOrigem.glob(f"*{self.arquivo_selecionado[tipoArquivo]}"):
+            if tipoArquivo == "Pasta":
+                if arquivo.is_dir():
+                    codigo = arquivo.stem[:3] if localCodigo == "Início" else arquivo.stem[-3:]
+                    arquivos[codigo] = {"arquivo": arquivo, "destino": None}
 
-            if self.localizao_codigo[self.localizacao_codigo_selecionado] == "Início":
-                codigo = arquivo.stem[:3]
             else:
-                codigo = arquivo.stem[-3:]
+                codigo = arquivo.stem[:3] if localCodigo == "Início" else arquivo.stem[-3:]
+                arquivos[codigo] = {"arquivo": arquivo, "destino": None}
 
-            if codigo in arquivos:
+        for pasta in pastaDestino.iterdir(): # adicionar a pasta de destino nos itens do dicionário
 
-                if tipoArquivo == "Pasta":
-                    if arquivo.is_dir():
+            if not pasta.is_dir():
+                continue
 
-                        arquivos[codigo]["arquivo"] = arquivo
+            codigo = pasta.name[:3]
 
-                else:
-                    arquivos[codigo]["arquivo"] = arquivo
+            if not codigo in arquivos:
+                continue
 
-        totalArquivos = sum(1 for dados in arquivos.values() if dados["arquivo"] is not None)
+            arquivos[codigo]["destino"] = pasta
+
+        totalArquivos = len(arquivos)
         print(f"Total de arquivos a mover: {totalArquivos}")
+
         self.progressBar["maximum"] = totalArquivos
         self.progressBar["value"] = 0
 
-        for codigo, dados in arquivos.items():
+        for item in arquivos: # mover os arquivos para a pasta de destino
 
-            caminhoDestino = dados["caminho"]
-            arquivo = dados["arquivo"]
+            self.progressBar["value"] += 1
+            self.master.after(0, lambda: self.progressLabel.config(text=f"{int(self.progressBar['value'])} / {totalArquivos} arquivos"))
+            self.master.update_idletasks()
 
-            if arquivo is not None:
+            arquivo = arquivos[item]["arquivo"]
 
-                print(f"Movendo {arquivo.name}")
-                self.progressBar["value"] += 1
-                self.progressBar.update()
+            if arquivos[item]["destino"] is None:
+                arquivosNaoEncontrados += 1
+                print(f"Nenhuma pasta de destino encontrada para {arquivo.name}")
+                continue
 
-                try:
+            caminhoDestino = arquivos[item]["destino"] / pastaCaminho
+
+            print(f"Movendo {arquivo.name}")
+
+            try:
+
+                if not caminhoDestino.exists():
                     caminhoDestino.mkdir(parents=True, exist_ok=True)
 
-                    if renomear:
-                        novoNome = f"{renomear}{arquivo.suffix}"
-                    else:
-                        novoNome = arquivo.name
+                if renomear:
+                    novoNome = f"{renomear}{arquivo.suffix}"
+                else:
+                    novoNome = arquivo.name
 
-                    shutil.move(str(arquivo), str(caminhoDestino / novoNome))
-                    arquivosMovidos += 1
-                except Exception as e:
-                    arquivosErro += 1
-                    print(f"Erro ao mover o arquivo '{arquivo.name}': {e}")
-            else:
-                arquivosNaoEncontrados += 1
-                print(f"Nenhum arquivo encontrado para o código '{codigo}'")
+                shutil.move(arquivo, caminhoDestino / novoNome)
 
-        print(f"\nProcesso concluído!\n{arquivosMovidos} arquivo(s) movido(s).\n{arquivosErro} arquivo(s) com erro ao mover.\n{arquivosNaoEncontrados} código(s) sem arquivo correspondente.\n")
-        self.executarBtn.config(state="normal", text="Executar")
+                arquivosMovidos += 1
+
+            except Exception as e:
+                arquivosErro += 1
+                print(f"Erro ao mover o arquivo '{arquivo.name}': {e}")
+
+        print(f"\nProcesso concluído!\n{arquivosMovidos} arquivo(s) movido(s).\n{arquivosErro} arquivo(s) com erro ao mover.\n{arquivosNaoEncontrados} arquivos(s) sem pasta correspondente.\n")
+        self.master.after(0, lambda: self.executarBtn.config(state="normal", text="Executar"))
+        self.master.after(0, lambda: self.progressLabel.config(text=f"Processo concluído!"))
 
 root = Tk()
 root.title("Conntador")
