@@ -58,6 +58,7 @@ class Application:
     def __init__(self, master=None):
 
         self.master = master
+        self.executando = False
 
         self.fontePadrao = ("Arial", "10")
         self.fontePequena = ("Arial", "5")
@@ -245,11 +246,29 @@ class Application:
             return False
         return True
 
+    def atualizarProgresso(self, valor):
+
+        if not self.executando:
+            return
+
+        self.progressBar["value"] = valor
+        self.progressLabel.config(text=f"{int(self.progressBar['value'])} / {int(self.progressBar['maximum'])} arquivos")
+
+    def finalizar(self, movidos, erros, naoEncontrados):
+
+        self.executando = False
+
+        print(f"\nProcesso concluído!\n{movidos} arquivo(s) movido(s).\n{erros} arquivo(s) com erro ao mover.\n{naoEncontrados} arquivos(s) sem pasta correspondente.\n")
+        self.executarBtn.config(state="normal", text="Executar")
+        self.progressLabel.config(text=f"Processo concluído!")
+
     def executar(self):
 
         if not self.validar_entradas():
             return
 
+        self.executando = True
+        
         pastaOrigem = Path(self.pastaOrigemEntry.get())
         pastaDestino = Path(self.pastaDestinoEntry.get())
         pastaCaminho = self.pastaCaminhoEntry.get()
@@ -296,9 +315,7 @@ class Application:
 
         for item in arquivos: # mover os arquivos para a pasta de destino
 
-            self.progressBar["value"] += 1
-            self.master.after(0, lambda: self.progressLabel.config(text=f"{int(self.progressBar['value'])} / {totalArquivos} arquivos"))
-            self.master.update_idletasks()
+            self.master.after(0, lambda: self.atualizarProgresso(self.progressBar["value"]+1))
 
             arquivo = arquivos[item]["arquivo"]
 
@@ -328,10 +345,8 @@ class Application:
             except Exception as e:
                 arquivosErro += 1
                 print(f"Erro ao mover o arquivo '{arquivo.name}': {e}")
-
-        print(f"\nProcesso concluído!\n{arquivosMovidos} arquivo(s) movido(s).\n{arquivosErro} arquivo(s) com erro ao mover.\n{arquivosNaoEncontrados} arquivos(s) sem pasta correspondente.\n")
-        self.master.after(0, lambda: self.executarBtn.config(state="normal", text="Executar"))
-        self.master.after(0, lambda: self.progressLabel.config(text=f"Processo concluído!"))
+        
+        self.master.after(0, lambda: self.finalizar(arquivosMovidos, arquivosErro, arquivosNaoEncontrados))
 
 root = Tk()
 root.title("Conntador")
