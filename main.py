@@ -61,7 +61,6 @@ class Application:
         self.executando = False
 
         self.fontePadrao = ("Arial", "10")
-        self.fontePequena = ("Arial", "5")
         self.fontePadraoBold = ("Arial", "10", "bold")
 
         master.minsize(500,400)
@@ -209,7 +208,7 @@ class Application:
 
         localCodigoCombo = ttk.Combobox(
             janelaConfig,
-            values=self.localizao_codigo,
+            values=self.localizacao_codigo,
             state="readonly"
         )
         localCodigoCombo.current(self.localizacao_codigo_selecionado)
@@ -227,7 +226,7 @@ class Application:
         sairBtn.pack(side=LEFT, padx=10)
 
         def confirmar():
-            self.localizacao_codigo_selecionado = self.localizao_codigo.index(localCodigoCombo.get())
+            self.localizacao_codigo_selecionado = self.localizacao_codigo.index(localCodigoCombo.get())
             messagebox.showinfo("Configurações", "Configurações salvas com sucesso!")
             janelaConfig.destroy()
 
@@ -258,7 +257,7 @@ class Application:
 
         self.executando = False
 
-        print(f"\nProcesso concluído!\n{movidos} arquivo(s) movido(s).\n{erros} arquivo(s) com erro ao mover.\n{naoEncontrados} arquivos(s) sem pasta correspondente.\n")
+        print(f"\nProcesso concluído!\n{movidos} arquivo(s) movido(s).\n{erros} arquivo(s) com erro ao mover.\n{naoEncontrados} arquivo(s) sem pasta correspondente.\n")
         self.executarBtn.config(state="normal", text="Executar")
         self.progressLabel.config(text=f"Processo concluído!")
 
