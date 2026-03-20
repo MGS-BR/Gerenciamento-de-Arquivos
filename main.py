@@ -237,11 +237,26 @@ class Application:
 
     def validar_entradas(self):
 
-        if not self.pastaOrigemEntry.get():
+        pastaOrigem = self.pastaOrigemEntry.get()
+        pastaDestino = self.pastaDestinoEntry.get()
+
+        if not pastaOrigem:
             messagebox.showerror("Erro", "Por favor, preencha o campo de pasta de origem!")
             return False
-        if not self.pastaDestinoEntry.get():
+        if not pastaDestino:
             messagebox.showerror("Erro", "Por favor, preencha o campo de pasta de destino!")
+            return False
+        if not Path(pastaOrigem).exists():
+            messagebox.showerror("Erro", "A pasta de origem não existe!")
+            return False
+        if not Path(pastaDestino).exists():
+            messagebox.showerror("Erro", "A pasta de destino não existe!")
+            return False
+        if not Path(pastaOrigem).is_dir():
+            messagebox.showerror("Erro", "A pasta de origem deve ser uma pasta!")
+            return False
+        if not Path(pastaDestino).is_dir():
+            messagebox.showerror("Erro", "A pasta de destino deve ser uma pasta!")
             return False
         return True
 
