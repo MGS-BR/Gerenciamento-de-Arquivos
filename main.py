@@ -141,7 +141,7 @@ class Application:
         text="❓",
         command=lambda: messagebox.showinfo("Renomear Arquivos", "Após mover os arquivos para a pasta de destino os arquivos serão renomeados para o texto informado neste campo.\n\nNão é obrigatório o preenchimento deste campo!")
         )
-        renomearBtn.grid(row=4, column=2, padx=5, pady=10)
+        renomearBtn.grid(row=4, column=2, padx=5)
 
         self.executarBtn = Button(
         main,
@@ -363,6 +363,6 @@ class Application:
         self.master.after(0, lambda: self.finalizar(arquivosMovidos, arquivosErro, arquivosNaoEncontrados))
 
 root = Tk()
-root.title("Conntador")
+root.title("Gerenciar Arquivos")
 Application(root)
 root.mainloop()
