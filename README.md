@@ -3,6 +3,7 @@
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 ![License](https://img.shields.io/badge/license-MIT-green)
 [![Python CI](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/ci.yml/badge.svg)](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/ci.yml)
+[![Build EXE](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/build.yml/badge.svg)](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/build.yml)
 
 Aplicação desktop desenvolvida em **Python + Tkinter** para automatizar a organização de arquivos com base em códigos presentes no nome.
 
