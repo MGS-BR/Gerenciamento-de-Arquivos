@@ -32,5 +32,5 @@ jobs:
     - name: Lint (flake8)
       run: |
         pip install flake8
-        flake8 . --max-line-length=120 --ignore=E203,W503
+        flake8 .
         
