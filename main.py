@@ -30,6 +30,8 @@ class Application:
 
     localizacao_codigo = ["Início", "Fim"]
 
+    tamanho_codigo = 3
+
     def centralizar_janela(self, janela):
         janela.update_idletasks()
 
@@ -219,14 +221,53 @@ class Application:
 
         localCodigoCombo.bind("<<ComboboxSelected>>", lambda e: mudar_exemplo(localCodigoCombo, exemploLabel))
 
+        caracteresCodigoTitulo = Label(
+            janelaConfig,
+            text = "Quantidade de caracteres do código:",
+            font = self.fontePadrao
+        )
+        caracteresCodigoTitulo.grid(row=3, column=0, columnspan=2, pady=(10,0))
+
+        frameControle = Frame(janelaConfig)
+        frameControle.grid(row=4, column=0, columnspan=2, pady=10)
+
+        def atualizar_tamanho_codigo(label, operacao):
+
+            numero_atualizado = int(quantidadeCodigoLabel.cget("text")) + (1 if operacao else -1)
+
+            if numero_atualizado >= 1:
+                label.config(text=numero_atualizado)
+
+        diminuitBtn = Button(
+            frameControle,
+            text = "➖",
+            command = lambda: atualizar_tamanho_codigo(quantidadeCodigoLabel, False)
+        )
+        diminuitBtn.pack(side=LEFT)
+
+        quantidadeCodigoLabel = Label(
+            frameControle,
+            text = self.tamanho_codigo,
+            font = self.fontePadraoBold
+        )
+        quantidadeCodigoLabel.pack(side=LEFT)
+
+        aumentarBtn = Button(
+            frameControle,
+            text = "➕",
+            command = lambda: atualizar_tamanho_codigo(quantidadeCodigoLabel, True)
+        )
+        aumentarBtn.pack(side=LEFT)
+
         frameBotoes = Frame(janelaConfig)
-        frameBotoes.grid(row=3, column=0, columnspan=2, pady=20)
+        frameBotoes.grid(row=5, column=0, columnspan=2, pady=20)
 
         sairBtn = Button(frameBotoes, text="Sair", command=janelaConfig.destroy, width=12)
         sairBtn.pack(side=LEFT, padx=10)
 
         def confirmar():
             self.localizacao_codigo_selecionado = self.localizacao_codigo.index(localCodigoCombo.get())
+            self.tamanho_codigo = int(quantidadeCodigoLabel.cget("text"))
             messagebox.showinfo("Configurações", "Configurações salvas com sucesso!")
             janelaConfig.destroy()
 
@@ -290,6 +331,8 @@ class Application:
         tipoArquivo = self.tipoArquivoCombo.get()
         localCodigo = self.localizacao_codigo[self.localizacao_codigo_selecionado]
 
+        tamanho_codigo = self.tamanho_codigo
+
         arquivosMovidos = 0
         arquivosErro = 0
         arquivosNaoEncontrados = 0
@@ -302,11 +345,11 @@ class Application:
 
             if tipoArquivo == "Pasta":
                 if arquivo.is_dir():
-                    codigo = arquivo.stem[:3] if localCodigo == "Início" else arquivo.stem[-3:]
+                    codigo = arquivo.stem[:tamanho_codigo] if localCodigo == "Início" else arquivo.stem[-tamanho_codigo:]
                     arquivos[codigo] = {"arquivo": arquivo, "destino": None}
 
             else:
-                codigo = arquivo.stem[:3] if localCodigo == "Início" else arquivo.stem[-3:]
+                codigo = arquivo.stem[:tamanho_codigo] if localCodigo == "Início" else arquivo.stem[-tamanho_codigo:]
                 arquivos[codigo] = {"arquivo": arquivo, "destino": None}
 
         for pasta in pastaDestino.iterdir(): # adicionar a pasta de destino nos itens do dicionário
@@ -314,7 +357,7 @@ class Application:
             if not pasta.is_dir():
                 continue
 
-            codigo = pasta.name[:3]
+            codigo = pasta.name[:tamanho_codigo]
 
             if not codigo in arquivos:
                 continue
