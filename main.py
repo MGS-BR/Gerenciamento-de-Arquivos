@@ -359,7 +359,7 @@ class Application:
             f"\nProcesso concluído!\n{movidos} arquivo(s) movido(s).\n{erros} arquivo(s) com erro ao mover.\n{naoEncontrados} arquivo(s) sem pasta correspondente.\n"
         )
         self.executarBtn.config(state="normal", text="Executar")
-        self.progressLabel.config(text=f"Processo concluído!")
+        self.progressLabel.config(text="Processo concluído!")
 
     def executar(self):
 
