@@ -29,6 +29,11 @@ jobs:
     - name: Verificar sintaxe
       run: python -m py_compile main.py
 
+    - name: Format check (Black)
+      run: |
+        pip install black
+        black . --check
+
     - name: Lint (flake8)
       run: |
         pip install flake8
