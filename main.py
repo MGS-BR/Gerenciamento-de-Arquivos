@@ -370,7 +370,7 @@ class Application:
 
         pastaOrigem = Path(self.pastaOrigemEntry.get())
         pastaDestino = Path(self.pastaDestinoEntry.get())
-        pastaCaminho = self.pastaCaminhoEntry.get()
+        pastaCaminho = self.pastaCaminhoEntry.get().strip()
         renomear = self.renomearEntry.get()
         tipoArquivo = self.tipoArquivoCombo.get()
         localCodigo = self.localizacao_codigo[self.localizacao_codigo_selecionado]
@@ -445,7 +445,7 @@ class Application:
                 print(f"Nenhuma pasta de destino encontrada para {arquivo.name}")
                 continue
 
-            caminhoDestino = arquivos[item]["destino"] / pastaCaminho
+            caminhoDestino = arquivos[item]["destino"] / Path(pastaCaminho)
 
             print(f"Movendo {arquivo.name}")
 
@@ -459,6 +459,7 @@ class Application:
                 else:
                     novoNome = arquivo.name
 
+                print(f"Destino final: '{caminhoDestino}'")
                 shutil.move(arquivo, caminhoDestino / novoNome)
 
                 arquivosMovidos += 1
