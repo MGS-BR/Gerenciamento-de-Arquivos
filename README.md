@@ -93,6 +93,11 @@ flowchart TD
 
 ---
 
+## 📽️ Exemplo de Funcionamento
+![Funcionamento](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/blob/main/assets/ExemploFuncionamento.gif)
+
+---
+
 ## ▶️ Como executar
 
 ```bash
