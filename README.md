@@ -1,7 +1,7 @@
 # 📂 Gerenciador de Arquivos
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/blob/main/LICENSE)
 [![Python CI](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/ci.yml/badge.svg)](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/ci.yml)
 [![Build EXE](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/build.yml/badge.svg)](https://github.com/MGS-BR/Gerenciamento-de-Arquivos/actions/workflows/build.yml)
 
